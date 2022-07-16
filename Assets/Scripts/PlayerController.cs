@@ -1,22 +1,33 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.DualShock;
 
 public class PlayerController : MonoBehaviour
 {
     [SerializeField] private CharacterController controller;
     [SerializeField] private float speed;
+    [SerializeField] private GameObject bulletPrefab;
+    [SerializeField] private Transform gunTipTransform;
+    [SerializeField] private float bulletVelocity;
+    [SerializeField, Range(.1f, 1000f)] private float bulletsPerSecond;
+    [SerializeField] float lowFreq;
+    [SerializeField] float highFreq;
+    [SerializeField] Color color;
     public Vector3 velocity;
     public float gravity = -20f;
     public float jumpVelocity;
     public bool isGrounded;
     public float maxJumpHoldTime = 3f;
     public float endOfJump = 0f;
+    public bool readyToShoot = true;
 
     public Vector2 moveInput;
+    public bool gunTriggerInput;
 
     public void OnMove(InputAction.CallbackContext context)
     {
-        moveInput = context.ReadValue<Vector2>();
+        moveInput = Vector2.ClampMagnitude(context.ReadValue<Vector2>(), 1);
+        Debug.Log($"moveInput: {moveInput}");
     }
 
     public void OnJump(InputAction.CallbackContext context)
@@ -38,7 +49,12 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    private void Update()
+    public void OnGunTrigger(InputAction.CallbackContext context)
+    {
+        gunTriggerInput = context.ReadValueAsButton();
+    }
+
+    private void FixedUpdate()
     {
         // Move
         Vector3 motion = moveInput.x * transform.right + moveInput.y * transform.forward;
@@ -58,7 +74,6 @@ public class PlayerController : MonoBehaviour
 
         Ray ray = new Ray(transform.position, Vector3.down);
         isGrounded = Physics.SphereCast(ray: ray, radius: playerRadius, maxDistance: maxSphereCastDist);
-        Debug.Log($"IS GROUNDED {isGrounded}");
 
         if (isGrounded && velocity.y < 0)
         {
@@ -69,5 +84,27 @@ public class PlayerController : MonoBehaviour
         {
             gravity = -20f;
         }
+
+        // Shoot
+        if (gunTriggerInput && readyToShoot)
+        {
+            readyToShoot = false;
+            GameObject bullet = Instantiate(bulletPrefab, position: gunTipTransform.position, rotation: Quaternion.identity);
+            bullet.GetComponent<Rigidbody>().velocity = bulletVelocity * gunTipTransform.forward;
+            Invoke(nameof(SetReadyToShootAsTrue), time: 1f / bulletsPerSecond);
+        }
+
+        //if (gunTriggerInput)
+        //{
+        var gamepad = (DualSenseGamepadHID)Gamepad.current;
+        gamepad.SetMotorSpeeds(lowFreq, highFreq);
+        gamepad.SetLightBarColor(color);
+        //}
+    }
+
+    private void SetReadyToShootAsTrue()
+    {
+        print("Can shoot!");
+        readyToShoot = true;
     }
 }

@@ -53,13 +53,22 @@ public partial class @InputMain : IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""GunTrigger"",
+                    ""type"": ""Button"",
+                    ""id"": ""0f6b6b82-8e81-47ed-b056-15e47aedb404"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
                 {
                     ""name"": ""WASD"",
                     ""id"": ""0a3bd51e-6736-4dc9-8ae4-41e0ce7551cc"",
-                    ""path"": ""2DVector"",
+                    ""path"": ""2DVector(mode=1)"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
@@ -114,7 +123,7 @@ public partial class @InputMain : IInputActionCollection2, IDisposable
                 {
                     ""name"": ""Arrows"",
                     ""id"": ""93affaf6-f63e-4c3c-91b4-0c3ed9c2e617"",
-                    ""path"": ""2DVector"",
+                    ""path"": ""2DVector(mode=1)"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
@@ -171,7 +180,7 @@ public partial class @InputMain : IInputActionCollection2, IDisposable
                     ""id"": ""bc7efffc-a02c-4d8b-861f-61f08497e8fd"",
                     ""path"": ""<Gamepad>/leftStick"",
                     ""interactions"": """",
-                    ""processors"": ""NormalizeVector2"",
+                    ""processors"": """",
                     ""groups"": ""Gamepad"",
                     ""action"": ""Move"",
                     ""isComposite"": false,
@@ -180,7 +189,7 @@ public partial class @InputMain : IInputActionCollection2, IDisposable
                 {
                     ""name"": ""DPAD"",
                     ""id"": ""c485f232-a6b7-4eb1-9f00-acb8ce16b043"",
-                    ""path"": ""2DVector"",
+                    ""path"": ""2DVector(mode=1)"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
@@ -275,6 +284,28 @@ public partial class @InputMain : IInputActionCollection2, IDisposable
                     ""action"": ""Jump"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""bb0beef7-5f21-4f03-89d6-4c3f3aaf78af"",
+                    ""path"": ""<Gamepad>/rightTrigger"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Gamepad"",
+                    ""action"": ""GunTrigger"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""1933bd65-5dd5-4761-b919-e3c73398a506"",
+                    ""path"": ""<Mouse>/leftButton"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Keyboard & Mouse"",
+                    ""action"": ""GunTrigger"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -314,6 +345,7 @@ public partial class @InputMain : IInputActionCollection2, IDisposable
         m_Player_Move = m_Player.FindAction("Move", throwIfNotFound: true);
         m_Player_Look = m_Player.FindAction("Look", throwIfNotFound: true);
         m_Player_Jump = m_Player.FindAction("Jump", throwIfNotFound: true);
+        m_Player_GunTrigger = m_Player.FindAction("GunTrigger", throwIfNotFound: true);
     }
 
     public void Dispose()
@@ -376,6 +408,7 @@ public partial class @InputMain : IInputActionCollection2, IDisposable
     private readonly InputAction m_Player_Move;
     private readonly InputAction m_Player_Look;
     private readonly InputAction m_Player_Jump;
+    private readonly InputAction m_Player_GunTrigger;
     public struct PlayerActions
     {
         private @InputMain m_Wrapper;
@@ -383,6 +416,7 @@ public partial class @InputMain : IInputActionCollection2, IDisposable
         public InputAction @Move => m_Wrapper.m_Player_Move;
         public InputAction @Look => m_Wrapper.m_Player_Look;
         public InputAction @Jump => m_Wrapper.m_Player_Jump;
+        public InputAction @GunTrigger => m_Wrapper.m_Player_GunTrigger;
         public InputActionMap Get() { return m_Wrapper.m_Player; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -401,6 +435,9 @@ public partial class @InputMain : IInputActionCollection2, IDisposable
                 @Jump.started -= m_Wrapper.m_PlayerActionsCallbackInterface.OnJump;
                 @Jump.performed -= m_Wrapper.m_PlayerActionsCallbackInterface.OnJump;
                 @Jump.canceled -= m_Wrapper.m_PlayerActionsCallbackInterface.OnJump;
+                @GunTrigger.started -= m_Wrapper.m_PlayerActionsCallbackInterface.OnGunTrigger;
+                @GunTrigger.performed -= m_Wrapper.m_PlayerActionsCallbackInterface.OnGunTrigger;
+                @GunTrigger.canceled -= m_Wrapper.m_PlayerActionsCallbackInterface.OnGunTrigger;
             }
             m_Wrapper.m_PlayerActionsCallbackInterface = instance;
             if (instance != null)
@@ -414,6 +451,9 @@ public partial class @InputMain : IInputActionCollection2, IDisposable
                 @Jump.started += instance.OnJump;
                 @Jump.performed += instance.OnJump;
                 @Jump.canceled += instance.OnJump;
+                @GunTrigger.started += instance.OnGunTrigger;
+                @GunTrigger.performed += instance.OnGunTrigger;
+                @GunTrigger.canceled += instance.OnGunTrigger;
             }
         }
     }
@@ -441,5 +481,6 @@ public partial class @InputMain : IInputActionCollection2, IDisposable
         void OnMove(InputAction.CallbackContext context);
         void OnLook(InputAction.CallbackContext context);
         void OnJump(InputAction.CallbackContext context);
+        void OnGunTrigger(InputAction.CallbackContext context);
     }
 }
