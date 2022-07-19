@@ -1,6 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.InputSystem.DualShock;
+using UniSense;
 
 public class PlayerController : MonoBehaviour
 {
@@ -12,6 +12,7 @@ public class PlayerController : MonoBehaviour
     [SerializeField, Range(.1f, 1000f)] private float bulletsPerSecond;
     [SerializeField] float lowFreq;
     [SerializeField] float highFreq;
+    [SerializeField] byte force;
     [SerializeField] Color color;
     public Vector3 velocity;
     public float gravity = -20f;
@@ -20,6 +21,7 @@ public class PlayerController : MonoBehaviour
     public float maxJumpHoldTime = 3f;
     public float endOfJump = 0f;
     public bool readyToShoot = true;
+    public DualSenseGamepadHID dualsense;
 
     public Vector2 moveInput;
     public bool gunTriggerInput;
@@ -27,7 +29,6 @@ public class PlayerController : MonoBehaviour
     public void OnMove(InputAction.CallbackContext context)
     {
         moveInput = Vector2.ClampMagnitude(context.ReadValue<Vector2>(), 1);
-        Debug.Log($"moveInput: {moveInput}");
     }
 
     public void OnJump(InputAction.CallbackContext context)
@@ -94,12 +95,28 @@ public class PlayerController : MonoBehaviour
             Invoke(nameof(SetReadyToShootAsTrue), time: 1f / bulletsPerSecond);
         }
 
-        //if (gunTriggerInput)
-        //{
-        var gamepad = (DualSenseGamepadHID)Gamepad.current;
-        gamepad.SetMotorSpeeds(lowFreq, highFreq);
-        gamepad.SetLightBarColor(color);
-        //}
+        if (dualsense == null)
+        {
+            dualsense = DualSenseGamepadHID.FindCurrent();
+        }
+
+        if (dualsense == null) return;
+
+        dualsense.SetMotorSpeeds(lowFreq, highFreq);
+        dualsense.SetLightBarColor(color);
+
+        DualSenseGamepadState dualsenseState = new DualSenseGamepadState();
+
+        DualSenseTriggerState triggerState = new DualSenseTriggerState();
+
+        triggerState.Continuous.Force = force;
+
+        dualsenseState.LeftTrigger = triggerState;
+        dualsenseState.RightTrigger = triggerState;
+        dualsenseState.Motor = new DualSenseMotorSpeed(lowFreq, highFreq);
+
+        dualsense?.SetGamepadState(dualsenseState);
+        dualsense.ResetHaptics();
     }
 
     private void SetReadyToShootAsTrue()
